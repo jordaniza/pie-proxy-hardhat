@@ -59,21 +59,38 @@ describe("PProxy", () => {
   });
 
   describe("Delegating calls to implementation contract", async () => {
-    it("Calls should be delegated to implementation contract", async () => {
-      const value = "TEST";
+    let proxiedImplementation: TestImplementation;
+
+    beforeEach(async () => {
       await proxy.setImplementation(implementationContract.address);
 
-      const proxiedImplementation = new ethers.Contract(
+      proxiedImplementation = new ethers.Contract(
         proxy.address,
         implementationContract.interface,
         signers[0]
       ) as TestImplementation;
+    });
+
+    it("Calls should be delegated to implementation contract", async () => {
+      const value = "TEST";
       await proxiedImplementation.setValue("TEST");
+
       const actualValue = await proxiedImplementation.getValue();
-      expect(actualValue).to.eq(value, "");
-      // Implementation storage should not be changed
       const implementationValue = await implementationContract.getValue();
+
+      expect(actualValue).to.eq(value, "");
       expect(implementationValue).to.eq("");
+    });
+
+    it("should work with a payable function or when sending eth", async () => {
+      const value = ethers.utils.parseEther("1");
+      await proxiedImplementation.isPayable({ value });
+
+      const actualPaid = await proxiedImplementation.paid();
+      const implementationPaid = await implementationContract.paid();
+
+      expect(actualPaid).to.eq(value);
+      expect(implementationPaid).to.eq(0);
     });
   });
 });

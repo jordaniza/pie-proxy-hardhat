@@ -37,6 +37,10 @@ contract PProxy is PProxyStorage {
        return internalFallback();
     }
 
+    receive() external payable {
+        return internalFallback();
+    }    
+
     function internalFallback() internal virtual {
         address contractAddr = readAddress(IMPLEMENTATION_SLOT);
         assembly {
