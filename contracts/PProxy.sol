@@ -55,5 +55,4 @@ contract PProxy is PProxyStorage {
             default { return(ptr, size) }
         }
     }
-
 }
