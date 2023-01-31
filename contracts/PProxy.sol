@@ -1,6 +1,7 @@
 pragma solidity 0.8.16;
 
 import "./PProxyStorage.sol";
+import "./Address.sol";
 
 contract PProxy is PProxyStorage {
 
@@ -12,7 +13,7 @@ contract PProxy is PProxyStorage {
         _;
     }
 
-    constructor () public {
+    constructor () {
         setAddress(OWNER_SLOT, msg.sender);
     }
 
@@ -32,6 +33,13 @@ contract PProxy is PProxyStorage {
         setAddress(IMPLEMENTATION_SLOT, _newImplementation);
     }
 
+    /// @dev see OpenZeppelin ERC1967Proxy
+    function setImplementationAndCall(address _newImplementation, bytes memory _data) onlyProxyOwner payable public {
+        setImplementation(_newImplementation);
+        if (_data.length > 0) {
+            Address.functionDelegateCall(_newImplementation, _data);
+        }
+    }
 
     fallback () external payable {
        return internalFallback();
