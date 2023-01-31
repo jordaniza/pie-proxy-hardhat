@@ -56,6 +56,26 @@ describe("PProxy", () => {
       await expect(altSignerProxy.setImplementation(PLACE_HOLDER_ADDRESS)).to.be
         .reverted;
     });
+
+    it('Can make a call when setting the implementation with setImplementationAndCall', async () => {
+      const value = "TEST";
+      const encodedCall = implementationContract.interface.encodeFunctionData('setValue', [value]);
+
+      await proxy.setImplementationAndCall(implementationContract.address, encodedCall);
+
+      const proxiedImplementation = new ethers.Contract(
+        proxy.address,
+        implementationContract.interface,
+        signers[0]
+      ) as TestImplementation;
+      const actualValue = await proxiedImplementation.getValue();
+      const implementationValue = await implementationContract.getValue();
+      const implementationAddress = await proxy.getImplementation();
+
+      expect(implementationAddress).to.eq(implementationContract.address);
+      expect(actualValue).to.eq(value);
+      expect(implementationValue).to.eq('');
+    });
   });
 
   describe("Delegating calls to implementation contract", async () => {
